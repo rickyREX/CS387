@@ -28,7 +28,9 @@ export default function Home() {
         window.location.href = "/home";
       }
     } catch (e) {
-      console.log("drop failed. Please try again.")
+      if(e.response.status===401){
+        window.location.href = "/login";
+      }
     }
   };
 

@@ -21,7 +21,9 @@ export default function Instructor() {
 
             })
             .catch(err => {
-                console.log(err)
+                if(err.response.status===401){
+                    window.location.href = "/login";
+                }
             })
     }, [])
 

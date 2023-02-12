@@ -19,6 +19,14 @@ app.use(session({
   saveUninitialized: true,
 
 }));
+const checkLoggedIn = (req, res, next) => {
+  if (req.session.user) {
+    next();
+  } else {
+    res.status(401).send("Unauthorized");
+  }
+};
+
 
 app.post("/login", async (req, res) => {
   // Replace this with your actual authentication logic
@@ -58,7 +66,7 @@ app.get('/course/:course_id', async (req, res) => {
   }
 });
 
-app.get('/course/running/:dept_name', async (req, res) => {
+app.get('/course/running/:dept_name',  async (req, res) => {
   try {
     const { dept_name } = req.params;
     const course_info = await pool.query('with new as (select year, semester from reg_dates where start_time<NOW() order by year desc, semester desc limit 1   )SELECT teaches.course_id,title FROM (course NATURAL JOIN teaches),new where  dept_name= $1 and teaches.year=new.year and teaches.semester=new.semester ', [dept_name]);
@@ -86,6 +94,7 @@ app.get('/home', async (req, res) => {
   }
 });
 
+
   
 app.get('/instructor/:instructor_id', async (req, res) => {
   try {
@@ -93,7 +102,7 @@ app.get('/instructor/:instructor_id', async (req, res) => {
     console.log('shvfh',instructor_id);
     const instructor_info = await pool.query('SELECT name,dept_name FROM instructor WHERE id = $1', [instructor_id]);
     const instructor_course = await pool.query('with new as (select year, semester from reg_dates where start_time<NOW() order by year desc, semester desc limit 1   )SELECT course_id,title from (teaches NATURAL JOIN course),new WHERE id = $1 and teaches.year=new.year and teaches.semester=new.semester ', [instructor_id]);
-    const course_prev = await pool.query('with new as (select year, semester from reg_dates where start_time<NOW() order by year desc, semester desc limit 1   )(select course_id,title, teaches.year,teaches.semester from (teaches NATURAL JOIN course),new where teaches.year<=new.year and id=$1 except SELECT course_id,title,teaches.year,teaches.semester from (teaches NATURAL JOIN course),new WHERE id = $1 and teaches.year=new.year and teaches.semester=new.semester) order by year desc ,semester desc  ', [instructor_id]);
+    const course_prev = await pool.query('with new as (select year, semester from reg_dates where start_time<NOW() order by year desc, semester desc limit 1   )(select course_id,title, teaches.year,teaches.semester from (teaches NATURAL JOIN course),new where teaches.year<=new.year and id=$1 except SELECT course_id,title,teaches.year,teaches.semester from (teaches NATURAL JOIN courseq),new WHERE id = $1 and teaches.year=new.year and teaches.semester=new.semester) order by year desc ,semester desc  ', [instructor_id]);
     
     res.json({ 'instructor_info': instructor_info.rows, 'instructor_course': instructor_course.rows,'course_prev':course_prev.rows });
 
